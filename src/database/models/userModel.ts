@@ -1,4 +1,10 @@
-import { Table, Column, DataType, Model, PrimaryKey } from 'sequelize-typescript';
+import {
+  Table,
+  Column,
+  DataType,
+  Model,
+  PrimaryKey,
+} from 'sequelize-typescript';
 
 @Table({
   tableName: 'users', // The table name in your database
@@ -34,6 +40,7 @@ class User extends Model {
   @Column({
     type: DataType.ENUM('Teacher', 'institute', 'super-admin', 'student'),
     allowNull: false,
+    defaultValue: 'student', // 👈 this sets the default if role is not provided
   })
   declare role: string;
 }
