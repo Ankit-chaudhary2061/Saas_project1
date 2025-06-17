@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 
 import User from '../../../database/models/userModel';
-import bcrypt from "bcrypt"
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 // const registerUser = async(req: Request, res: Response) => { // const username = req.body.username;
 //   // const password = req.body.password;
 //   // const email = req.body.email;
@@ -35,7 +36,7 @@ class AuthController {
       return;
     }
     const { username, password, email } = req.body;
-    
+
     if (!username || !password || !email) {
       res.status(400).json({
         message: 'please provide me username, password, email',
@@ -43,12 +44,49 @@ class AuthController {
     } else {
       await User.create({
         username: username,
-        password: bcrypt.hashSync(password,12),
+        password: bcrypt.hashSync(password, 12),
         email: email,
       });
       res.status(200).json({
         message: 'user registered sucessfully',
       });
+    }
+  }
+  async loginUser(req: Request, res: Response) {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      res.status(400).json({
+        message: 'plese provide email and password',
+      });
+      return;
+    }
+    const data = await User.findAll({
+      where: {
+        email,
+      },
+    });
+    if (data.length == 0) {
+      res.status(400).json({
+        message: 'not registered ',
+      });
+    } else {
+      const isPasswordMatch = bcrypt.compareSync(password, data[0].password);
+      if (isPasswordMatch) {
+        const token = jwt.sign(
+          { id: data[0].id }, // payload
+          'thisissecreatehai', // secret key (use env var instead!)
+          { expiresIn: '1h' } // token expires in 1 hour (you can change it)
+        );
+
+        res.json({
+          message: 'Login successful',
+          token: token,
+        });
+      } else {
+        res.status(400).json({
+          message: ' invaid email or password',
+        });
+      }
     }
   }
 }
